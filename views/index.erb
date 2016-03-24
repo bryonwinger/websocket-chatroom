@@ -1,0 +1,96 @@
+<!doctype html>
+<html>
+  <head>
+  </head>
+  <body>
+
+      # WebSockets Chat App
+      <div id="name-input">
+        <input type="text" id="name" placeholder="NAME">
+      </div>
+      <div id="input-box">
+        <input type="text" id="message" style="height:40px; width:300px">
+      </div>
+
+       <div id="chat-log">
+        <textarea id="log-box" style="height:400px; width:300px">
+        </textarea>
+      </div>
+
+      <div id="buttons">
+        <button id="disconnect">Disconnect</button>
+      </div>
+
+
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <script>
+      // where our WebSockets logic will go later
+      var socket, host;
+      host = "ws://localhost:3001";
+      
+      function addMessage(msg) {
+        $("#log-box").append("" + msg + "\n");
+      }
+
+      function send() {
+        var text = $("#message").val();
+        if (text == '') {
+          addMessage("Please Enter a Message");
+          return;
+        }
+
+        var name = $('#name').val();
+        body = name + ": " + text;
+        try {
+          socket.send(body);
+          // addMessage("Sent: " + text)
+        } catch(exception) {
+          addMessage("Failed To Send")
+        }
+
+        $("#message").val('');
+      }
+
+      function connect() {
+        try {
+          socket = new WebSocket(host);
+
+          addMessage("Socket State: " + socket.readyState);
+
+          socket.onopen = function() {
+            addMessage("Socket Status: " + socket.readyState + " (open)");
+          }
+
+          socket.onclose = function() {
+            addMessage("Socket Status: " + socket.readyState + " (closed)");
+          }
+
+          socket.onmessage = function(msg) {
+            addMessage(msg.data);
+          }
+        } catch(exception) {
+          addMessage("Error: " + exception);
+        }
+      }
+
+      $(function() {
+        connect();
+      });
+
+      $('#message').keypress(function(event) {
+        if (event.keyCode == '13') { send(); }
+      });
+
+      $("#disconnect").click(function() {
+        if ( socket.readyState == 1 ) {
+          socket.close()
+          $(this).html('Reconnect');         
+        } else {
+          $(this).html('Disconnect');
+          connect();
+        }
+      });
+
+    </script>
+  </body>
+</html>
